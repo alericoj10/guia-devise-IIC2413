@@ -53,7 +53,7 @@ config.action_mailer.default_url_options = { host: 'url-de-app-heroku' }
 
 4. Generar vistas de devise, esto incluye todos los forms necesarios para las acciones de autenticación.
 ```
-$ rails generate devise:views users
+$ rails generate devise:views
 ```
 
 ## Personalizar Setup de Devise
