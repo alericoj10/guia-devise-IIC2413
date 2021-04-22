@@ -56,19 +56,50 @@ config.action_mailer.default_url_options = { host: 'url-de-app-heroku' }
 $ rails generate devise:views users
 ```
 
+## Personalizar Setup de Devise
+
 Con Devise ya instalado, debemos continuar creando nuestro modelo de usuario:
 ```
 $ rails generate devise user
 ```
 
-Vemos que se creó el modelo, las rutas y un archivo de migración. Podemos editar los atributos del usuario directamente en la migración (como `:name` y `:phone`) y concretarlo corriendo:
+Vemos que se creó el modelo, las rutas y un archivo de migración. Podemos editar los atributos del usuario y agregar todos los que queramos directamente en la migración (como `:name` y `:phone`) y concretarlo corriendo:
 ```
 $ rails db:migrate
 ```
 
-## Personalizar rutas
-
-En nuestro archivo routes podemos extender la línea de devise, para personalizar las rutas, por ejemplo:
+En nuestro archivo `routes.rb` podemos extender la línea de devise, para personalizar las rutas, por ejemplo:
 ```ruby
 devise_for :users, path: '', path_names: {sign_in: 'login', sign_out: 'logout', sign_up: 'register'}
+```
+
+## Disponibilzar vistas y renderearlas dinámicamente
+
+En la vista principal (`application.html.erb`) abajo de nuestros flash messages podemos incorporar un pequeño control de sesión:
+```ruby
+<% if current_user %>
+  <%= link_to "Cerrar Sesión", destroy_user_session_path, method: :delete %>
+<% else %>
+  <%= link_to "Iniciar Sesión", new_user_session_path %>
+  <%= link_to "Registrarme", new_user_registration_path %>
+<% end %>
+```
+
+## Permitir nuestros atributos personalizados
+
+En primer lugar debemos modificar los forms de registro (y edición) para incluir los atributos que agregamos anteriormente. En `app/views/devise/registrations/new.html.erb` y `app/views/devise/registrations/edit.html.erb` respectivamente.
+
+Y finalmente, modificamos nuestro `application_controller.rb` para que permita esos nuevos parametros en las requests realizadas por los formularios.
+
+```ruby
+class ApplicationController < ActionController::Base
+  before_action :configure_permitted_parameters, if: :devise_controller?
+
+  protected
+
+  def configure_permitted_parameters
+    devise_parameter_sanitizer.permit(:sign_up, keys: [:name, :phone])
+    devise_parameter_sanitizer.permit(:account_update, keys: [:name, :phone])
+  end
+end
 ```
