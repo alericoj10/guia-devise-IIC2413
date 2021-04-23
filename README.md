@@ -120,3 +120,20 @@ def configure_account_update_params
   devise_parameter_sanitizer.permit(:account_update, keys: [:name, :phone])
 end
 ```
+
+Felicitaciones! Estando listos con nuestra instalación y flujo de autenticación de usuario ya podemos mergear nuestros cambios a la rama develop.
+```
+git add .
+```
+```
+git commit -m "..."
+```
+```
+git push origin autenticacion-devise
+```
+```
+git checkout develop
+```
+```
+git merge autenticacion-devise
+```
