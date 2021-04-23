@@ -31,7 +31,7 @@ Teniendo ya instalada la gema, podemos generar el código en nuestros proyectos 
 ```
 $ rails generate devise:install
 ```
- Nos saldrán 4 instrucciones que debemos seguir:
+ Nos saldrán 4 instrucciones, por ahora serguiramos hasta la numero 3:
 
 1. Copiar la siguiente línea para setear la url base:
 En `config/environments/development.rb`:
@@ -51,11 +51,6 @@ config.action_mailer.default_url_options = { host: 'url-de-app-heroku' }
 <p class="alert"><%= alert %></p>
 ```
 
-4. Generar vistas de devise, esto incluye todos los forms necesarios para las acciones de autenticación.
-```
-$ rails generate devise:views
-```
-
 ## Personalizar Setup de Devise
 
 Con Devise ya instalado, debemos continuar creando nuestro modelo de usuario:
@@ -68,9 +63,25 @@ Vemos que se creó el modelo, las rutas y un archivo de migración. Podemos edit
 $ rails db:migrate
 ```
 
+Luego, siguiendo el patrón de diseño MVC de Rails, creamos los controladores de usuario con Devise:
+```
+$ rails generate devise:controllers users
+```
+
+Esta generador nos recomienda modificar nuetro archivo `routes.rb` de manera que le digamos al router que use los controladores recién creados: 
+```ruby
+devise_for :users, controllers: { sessions: 'users/sessions', registrations: 'users/registrations' }
+```
+
+Generamos vistas de devise, esto incluye todos los forms necesarios para las acciones de autenticación.
+```
+$ rails generate devise:views users
+```
+
 En nuestro archivo `routes.rb` podemos extender la línea de devise, para personalizar las rutas, por ejemplo:
 ```ruby
-devise_for :users, path: '', path_names: {sign_in: 'login', sign_out: 'logout', sign_up: 'register'}
+devise_for :users, controllers: { sessions: 'users/sessions', registrations: 'users/registrations' }, 
+                   path: '', path_names: {sign_in: 'login', sign_out: 'logout', sign_up: 'register'}
 ```
 
 ## Disponibilzar vistas y renderearlas dinámicamente
@@ -87,19 +98,25 @@ En la vista principal (`application.html.erb`) abajo de nuestros flash messages 
 
 ## Permitir nuestros atributos personalizados
 
-En primer lugar debemos modificar los forms de registro (y edición) para incluir los atributos que agregamos anteriormente. En `app/views/devise/registrations/new.html.erb` y `app/views/devise/registrations/edit.html.erb` respectivamente.
+En primer lugar debemos modificar los forms de registro (y edición) para incluir los atributos que agregamos anteriormente. En `app/views/users/registrations/new.html.erb` y `app/views/users/registrations/edit.html.erb` respectivamente.
 
-Y finalmente, modificamos nuestro `application_controller.rb` para que permita esos nuevos parametros en las requests realizadas por los formularios.
-
+Y finalmente, si recordamos de la creacion del Modelo, teníamos la opcion de modificar los atributos de nuestro usuario antes de correr la migración. Pero los controladores aún no permiten que agreguemos estos a la tabla, por lo que editaremos el controlador `users/registrations_controller.rb` de la siguiente manera:
+- Descomentamos los before_action:
 ```ruby
-class ApplicationController < ActionController::Base
-  before_action :configure_permitted_parameters, if: :devise_controller?
+# before_action :configure_sign_up_params, only: [:create]
+# before_action :configure_account_update_params, only: [:update]
+```
+- Descomentamos los metodos referidos por los before_action, y agregamos SOLO nuestros atributos personalizados (`:name` y `:phone`):
+```ruby
+# protected
 
-  protected
+# If you have extra params to permit, append them to the sanitizer.
+def configure_sign_up_params
+  devise_parameter_sanitizer.permit(:sign_up, keys: [:name, :phone])
+end
 
-  def configure_permitted_parameters
-    devise_parameter_sanitizer.permit(:sign_up, keys: [:name, :phone])
-    devise_parameter_sanitizer.permit(:account_update, keys: [:name, :phone])
-  end
+# If you have extra params to permit, append them to the sanitizer.
+def configure_account_update_params
+  devise_parameter_sanitizer.permit(:account_update, keys: [:name, :phone])
 end
 ```
