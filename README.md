@@ -1,4 +1,4 @@
-# Autenticación con Devise
+# Ayudantía de Autenticación con Devise
 
 ## Lo que lograremos esta ayudantía:
 
